@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRỐNG ĐỒNG - Màn Chiếu Sân Khấu / LED Output</title>
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #000000;
+      color: #FFFFFF;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    #stageVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+      background: #000;
+    }
+    .stage-standby {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      text-align: center;
+      padding: 40px;
+      position: relative;
+      z-index: 2;
+    }
+    .stage-logo-wrapper {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .stage-logo {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 0 60px rgba(6, 182, 212, 0.4), 0 0 100px rgba(245, 158, 11, 0.2);
+      border: 4px solid #06B6D4;
+    }
+    .stage-sub {
+      font-size: 20px;
+      letter-spacing: 4px;
+      font-weight: 800;
+      color: #06B6D4;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+    }
+    .stage-banner {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #FFFFFF 0%, #F59E0B 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      max-width: 85vw;
+      line-height: 1.3;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+    }
+    .fullscreen-tip {
+      position: absolute;
+      bottom: 20px;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: opacity 0.5s;
+    }
+    body:hover .fullscreen-tip {
+      opacity: 1;
+    }
+    /* Ambient glow backdrop */
+    .bg-ambient {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(6, 182, 212, 0.15) 0%, rgba(0,0,0,0.95) 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body id="stageBody">
+  <div class="bg-ambient"></div>
+
+  <!-- Video Output on stage -->
+  <video id="stageVideo" playsinline></video>
+
+  <!-- Standby screen when no video is playing -->
+  <div class="stage-standby" id="stageStandby">
+    <div class="stage-logo-wrapper">
+      <img src="assets/logo.jpg" alt="Logo Trống Đồng" class="stage-logo">
+    </div>
+    <div class="stage-sub">TRƯỜNG CAO ĐẲNG LONG AN - CƠ SỞ ĐỨC HOÀ • CLB TNTN TRỐNG ĐỒNG</div>
+    <h1 class="stage-banner" id="stageBannerDisplay">NHIỆT LIỆT CHÀO MỪNG QUÝ VỊ ĐẠI BIỂU</h1>
+  </div>
+
+  <div class="fullscreen-tip">Nhấp đúp chuột hoặc nhấn [F11] để mở toàn màn hình máy chiếu</div>
+
+  <script>
+    const stageVideo = document.getElementById('stageVideo');
+    const stageStandby = document.getElementById('stageStandby');
+    const stageBannerDisplay = document.getElementById('stageBannerDisplay');
+
+    // Return to standby logo when video ends
+    stageVideo.addEventListener('ended', () => {
+      stageVideo.style.display = 'none';
+      stageStandby.style.display = 'flex';
+    });
+
+    // Double click to toggle full screen
+    document.addEventListener('dblclick', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen().catch(err => console.log(err));
+      }
+    });
+
+    // Communication with controller via BroadcastChannel
+    const channel = new BroadcastChannel('trong_dong_event_channel');
+
+    channel.onmessage = (event) => {
+      const data = event.data;
+      if (!data) return;
+
+      switch(data.type) {
+        case 'UPDATE_BANNER':
+          if (data.text) {
+            stageBannerDisplay.textContent = data.text;
+          }
+          break;
+
+        case 'PLAY_VIDEO':
+          if (data.url) {
+            stageVideo.src = data.url;
+            stageVideo.currentTime = data.currentTime || 0;
+            stageVideo.loop = !!data.loop;
+            stageVideo.muted = true; // muted on stage window to avoid sound duplication with main controller
+            stageVideo.play().then(() => {
+              stageVideo.style.display = 'block';
+              stageStandby.style.display = 'none';
+            }).catch(e => console.error(e));
+          }
+          break;
+
+        case 'PAUSE_VIDEO':
+          stageVideo.pause();
+          break;
+
+        case 'RESUME_VIDEO':
+          stageVideo.play().catch(e => console.error(e));
+          break;
+
+        case 'SEEK_VIDEO':
+          if (typeof data.currentTime === 'number') {
+            stageVideo.currentTime = data.currentTime;
+          }
+          break;
+
+        case 'STOP_VIDEO':
+          stageVideo.pause();
+          stageVideo.removeAttribute('src');
+          stageVideo.load();
+          stageVideo.style.display = 'none';
+          stageStandby.style.display = 'flex';
+          break;
+
+        case 'STANDBY':
+          stageVideo.style.display = 'none';
+          stageStandby.style.display = 'flex';
+          break;
+      }
+    };
+
+    // Notify main window that stage is ready
+    channel.postMessage({ type: 'STAGE_READY' });
+  </script>
+</body>
+</html>

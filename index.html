@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLB TNTN TRỐNG ĐỒNG - Bàn Điều Khiển Âm Thanh & Video Sự Kiện</title>
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="theme-dark">
+  <div class="app-container">
+    <!-- TOP HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-wrapper">
+          <img src="assets/logo.jpg" alt="Logo Trống Đồng - Trường Cao Đẳng Long An" class="app-logo" id="appLogo">
+          <div class="logo-badge">LIVE</div>
+        </div>
+        <div class="header-title-group">
+          <div class="header-topline">Trường Cao Đẳng Long An - Cơ Sở Đức Hoà</div>
+          <h1 class="header-app-name">CLB TNTN TRỐNG ĐỒNG <span>EVENT MEDIA STUDIO</span></h1>
+        </div>
+      </div>
+
+      <!-- Real-time Event Clock & Timer -->
+      <div class="header-center">
+        <div class="clock-card">
+          <div class="clock-label">GIỜ THỰC TẾ</div>
+          <div class="clock-value" id="realTimeClock">00:00:00</div>
+        </div>
+        <div class="timer-card">
+          <div class="timer-top">
+            <span class="timer-label">BẤM GIỜ TIẾT MỤC</span>
+            <div class="timer-actions">
+              <button class="btn-timer" id="btnTimerToggle" title="Bắt đầu/Dừng">▶</button>
+              <button class="btn-timer" id="btnTimerReset" title="Đặt lại">↺</button>
+            </div>
+          </div>
+          <div class="timer-value" id="eventStopwatch">00:00</div>
+        </div>
+      </div>
+
+      <!-- Quick Master Controls & Panic Button -->
+      <div class="header-right">
+        <!-- Visualizer Bar -->
+        <div class="visualizer-container">
+          <canvas id="audioVisualizer" width="180" height="42"></canvas>
+          <div class="meter-levels">
+            <div class="meter-bar">
+              <div class="meter-fill" id="meterL"></div>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="meterR"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Volume -->
+        <div class="master-fader-box">
+          <div class="master-fader-header">
+            <span class="fader-label">TỔNG</span>
+            <span class="fader-val" id="masterVolText">100%</span>
+          </div>
+          <div class="slider-wrapper">
+            <input type="range" id="masterVolume" min="0" max="1.5" step="0.01" value="1" title="Âm lượng tổng">
+          </div>
+        </div>
+
+        <!-- Emergency Panic Button -->
+        <button class="btn-panic" id="btnPanic" title="Dừng ngay lập tức toàn bộ âm thanh và video (Phím tắt: SPACE)">
+          <span class="panic-icon">⏹</span>
+          <span class="panic-text">DỪNG TẤT CẢ<small>[SPACE]</small></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTROL TOOLBAR -->
+    <nav class="action-toolbar">
+      <div class="toolbar-left">
+        <!-- Tab selector -->
+        <div class="tab-group">
+          <button class="tab-btn active" data-tab="soundboard">
+            <span class="tab-icon">🎛</span> Bàn Phím Nhanh (Pads)
+            <span class="badge" id="padCountBadge">0</span>
+          </button>
+          <button class="tab-btn" data-tab="cuelist">
+            <span class="tab-icon">📋</span> Kịch Bản Sự Kiện (Cue Sheet)
+            <span class="badge" id="cueCountBadge">0</span>
+          </button>
+          <button class="tab-btn" data-tab="presets">
+            <span class="tab-icon">🔔</span> Hiệu Ứng Sẵn (FX Presets)
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Mode selector: Solo vs Multi -->
+        <div class="mode-toggle-group">
+          <span class="toggle-label">Chế độ phát:</span>
+          <div class="btn-pill-group">
+            <button class="btn-pill active" id="btnModeSolo"
+              title="Chỉ phát 1 bài tại một thời điểm (Bấm bài mới tự tắt bài cũ)">
+              Đơn âm (Solo)
+            </button>
+            <button class="btn-pill" id="btnModeMulti"
+              title="Phát đè đồng thời nhiều âm thanh (Nhạc nền + Hiệu ứng vỗ tay/kèn)">
+              Đa âm (Mix)
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Auto Ducking (Giảm nhạc cho MC) -->
+        <button class="btn-feature" id="btnDucking"
+          title="Bấm giữ hoặc bật để giảm ngay âm lượng nhạc xuống 25% khi MC bắt đầu nói">
+          <span class="feature-icon">🎙</span>
+          <span>Hạ Nhạc MC</span>
+          <span class="duck-indicator">OFF</span>
+        </button>
+
+        <!-- Global Fade Out Button -->
+        <div class="fade-btn-group">
+          <button class="btn-feature" id="btnFadeOutGlobal"
+            title="Giảm dần âm lượng tất cả âm thanh đang phát về 0 trong 2.5s rồi dừng">
+            <span class="feature-icon">📉</span> Fade Out
+          </button>
+          <select id="fadeDurationSelect" class="select-fade-time" title="Thời gian Fade Out">
+            <option value="1">1s</option>
+            <option value="2" selected>2s</option>
+            <option value="3">3s</option>
+            <option value="5">5s</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Stage / Projector Screen Popout -->
+        <button class="btn-action btn-projector" id="btnOpenProjector"
+          title="Mở màn hình chiếu phụ cho máy chiếu / Màn hình LED sân khấu">
+          <span class="action-icon">🖥</span> Màn Chiếu Sân Khấu (LED)
+        </button>
+
+        <!-- Import / Upload Media -->
+        <label class="btn-action btn-upload" for="fileMediaInput"
+          title="Tải lên hàng loạt file MP3, WAV, M4A, MP4, WebM">
+          <span class="action-icon">📂</span> Thêm Âm Thanh / Video
+          <input type="file" id="fileMediaInput" multiple accept="audio/*,video/*" style="display:none">
+        </label>
+
+        <!-- Category Filter -->
+        <select id="filterCategory" class="select-category" title="Lọc theo nhóm sự kiện">
+          <option value="all">Tất cả danh mục</option>
+          <option value="ceremony">1. Nghi Lễ & Chào Cờ</option>
+          <option value="welcome">2. Đón Khách & Chào Mừng</option>
+          <option value="award">3. Trao Giải & Khen Thưởng</option>
+          <option value="bgm">4. Nhạc Nền MC Phát Biểu</option>
+          <option value="performance">5. Tiết Mục Văn Nghệ</option>
+          <option value="fx">6. Hiệu Ứng Âm Thanh (FX)</option>
+        </select>
+
+        <!-- Clear / Reset -->
+        <button class="btn-icon" id="btnClearAll" title="Xóa tất cả file">🗑</button>
+      </div>
+    </nav>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="app-main">
+      <!-- LEFT PANEL: MEDIA PLAYBACK WORKSPACE -->
+      <div class="workspace-viewport">
+        <!-- TAB 1: SOUNDBOARD PADS -->
+        <section class="tab-panel active" id="tabSoundboard">
+          <div class="soundboard-header-note">
+            <span>💡 <strong>Mẹo biểu diễn:</strong> Bấm trực tiếp vào ô hoặc nhấn các phím tắt <strong>[1 -
+                9]</strong>, <strong>[Q, W, E, R, T]</strong>, <strong>[A, S, D, F]</strong> để kích hoạt ngay. Phím
+              <strong>[SPACE]</strong> dừng ngay tất cả.</span>
+          </div>
+
+          <!-- Pads Grid -->
+          <div class="pads-grid" id="padsContainer">
+            <!-- Dynamic sound pads will be generated here -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyPadsNotice">
+            <div class="empty-icon">🎵</div>
+            <h3>Chưa có bài nhạc hoặc video nào được tải lên</h3>
+            <p>Kéo và thả các tệp âm thanh (MP3, WAV, M4A...) hoặc video (MP4) vào đây, hoặc nhấn nút <strong>"Thêm Âm
+                Thanh / Video"</strong> ở trên.</p>
+            <div class="empty-actions">
+              <label class="btn-primary" for="fileMediaInput">
+                <span>Chọn tệp từ máy tính</span>
+              </label>
+              <button class="btn-secondary" id="btnLoadSampleDemo">
+                <span>Dùng thử bộ nhạc mẫu sự kiện</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: CUE LIST / PLAYLIST -->
+        <section class="tab-panel" id="tabCueList">
+          <div class="cue-control-bar">
+            <div class="cue-info">
+              <h3>Kịch Bản Thứ Tự Sự Kiện</h3>
+              <p>Chạy từng tiết mục theo thứ tự đã lên lịch sẵn. Bấm <strong>Phát Mục Tiếp Theo</strong> để chuyển cảnh
+                trơn tru.</p>
+            </div>
+            <div class="cue-actions-top">
+              <button class="btn-primary" id="btnPlayNextCue">
+                <span>▶ Phát Mục Tiếp Theo (NEXT)</span>
+              </button>
+              <button class="btn-secondary" id="btnResetCueStatus">
+                <span>↺ Đặt Lại Trạng Thái</span>
+              </button>
+              <button class="btn-secondary" id="btnAddCustomCue">
+                <span>+ Thêm Mục Kịch Bản Mới</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="cue-list-table-wrapper">
+            <table class="cue-table">
+              <thead>
+                <tr>
+                  <th width="50">#</th>
+                  <th width="120">Thời Điểm</th>
+                  <th>Nội Dung / Tiết Mục</th>
+                  <th width="180">File Gắn Kèm</th>
+                  <th width="100">Thời Lượng</th>
+                  <th width="120">Trạng Thái</th>
+                  <th width="160">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="cueTableBody">
+                <!-- Dynamic Cue Items -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 3: BUILT-IN FX PRESETS -->
+        <section class="tab-panel" id="tabPresets">
+          <div class="presets-intro">
+            <h3>Bộ Hiệu Ứng Sân Khấu Sẵn Có (Web Audio FX)</h3>
+            <p>Các âm thanh hiệu ứng tạo bằng thuật toán âm thanh độ trễ 0ms - hoạt động ngay lập tức không cần tải file
+              ngoài:</p>
+          </div>
+          <div class="presets-grid" id="builtInFxGrid">
+            <!-- Generated Synthesized FX Buttons -->
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT SIDEBAR: VIDEO MONITOR & NOW PLAYING DECK -->
+      <aside class="workspace-sidebar">
+        <!-- VIDEO PREVIEW & STAGE MONITOR -->
+        <div class="sidebar-card stage-monitor-card">
+          <div class="card-header">
+            <span class="card-title">📺 MÀN HÌNH SÂN KHẤU / LED</span>
+            <div class="monitor-status" id="monitorStatus">SẴN SÀNG</div>
+          </div>
+          <div class="video-preview-wrapper" id="videoPreviewContainer">
+            <video id="mainVideoPlayer" playsinline preload="metadata"></video>
+            <div class="video-overlay-placeholder" id="videoOverlayPlaceholder">
+              <img src="assets/logo.jpg" alt="Logo" class="video-placeholder-logo">
+              <span class="placeholder-caption">MÀN HÌNH CHỜ SỰ KIỆN</span>
+              <small>Sẽ hiển thị video khi bấm bài có kèm video</small>
+            </div>
+            <div class="video-controls-overlay">
+              <button class="btn-video-ctrl" id="btnVideoFullscreen" title="Toàn màn hình">⛶</button>
+              <button class="btn-video-ctrl" id="btnVideoPiP" title="Cửa sổ nổi (PiP)">🗔</button>
+              <button class="btn-video-ctrl" id="btnVideoMute" title="Tắt tiếng video">🔊</button>
+            </div>
+          </div>
+          <!-- Video Control Bar -->
+          <div class="stage-video-control-panel">
+            <div class="stage-select-row">
+              <select id="stageVideoSelect" class="stage-video-select" title="Danh sách các video đã tải lên">
+                <option value="">-- Chọn video muốn chiếu --</option>
+              </select>
+              <label class="btn-stage-upload" for="fileVideoOnlyInput" title="Tải video mới từ máy tính">
+                ➕ Thêm
+                <input type="file" id="fileVideoOnlyInput" accept="video/mp4,video/webm,video/*" style="display:none">
+              </label>
+            </div>
+
+            <div class="stage-action-row">
+              <button class="btn-stage-play" id="btnStagePlaySelected" title="Bắt đầu chiếu video đã chọn">
+                ▶ Chiếu Video
+              </button>
+              <button class="btn-stage-stop" id="btnStageStopSelected"
+                title="Dừng video và về màn hình Logo Trống Đồng">
+                ⏹ Về Logo Chờ
+              </button>
+              <button class="btn-stage-loop" id="btnStageLoopToggle" title="Bật/Tắt lặp lại video">
+                🔁 Lặp
+              </button>
+            </div>
+
+            <!-- Video Status / Now Playing on Stage -->
+            <div class="stage-playing-status-bar" id="stagePlayingStatusBar">
+              <span class="status-indicator-dot"></span>
+              <span class="status-video-name" id="stageCurrentVideoName">Màn hình chờ (Logo Trống Đồng)</span>
+              <span class="status-video-time" id="stageCurrentVideoTime">--:--</span>
+            </div>
+          </div>
+
+          <div class="stage-banner-config">
+            <input type="text" id="stageBannerText" placeholder="Dòng chữ hiển thị trên màn chiếu..."
+              value="NHIỆT LIỆT CHÀO MỪNG QUÝ VỊ ĐẠI BIỂU">
+            <button class="btn-icon" id="btnSendBanner" title="Cập nhật chữ lên màn chiếu sân khấu">Gửi</button>
+          </div>
+        </div>
+
+        <!-- NOW PLAYING DECK -->
+        <div class="sidebar-card now-playing-card">
+          <div class="card-header">
+            <span class="card-title">🎵 ĐANG PHÁT (ACTIVE DECK)</span>
+            <span class="active-track-count" id="activeTrackCount">0 bài đang chạy</span>
+          </div>
+
+          <div class="now-playing-content" id="nowPlayingContainer">
+            <div class="no-playing-message">
+              <span>Chưa có âm thanh nào đang phát</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EVENT QUICK NOTES -->
+        <div class="sidebar-card notes-card">
+          <div class="card-header">
+            <span class="card-title">📝 GHI CHÚ KỊCH BẢN MC</span>
+          </div>
+          <textarea id="eventNotes"
+            placeholder="Nhập nhanh lưu ý thời gian, thứ tự đại biểu lên trao giải hoặc lời dẫn MC..."></textarea>
+        </div>
+      </aside>
+    </main>
+
+    <!-- FOOTER STATUS BAR -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span class="status-dot online"></span>
+        <span class="status-text">Hệ thống âm thanh & video sẵn sàng</span>
+        <span class="footer-divider">•</span>
+        <span id="storageStatusText">Dữ liệu lưu tạm trên trình duyệt</span>
+      </div>
+      <div class="footer-center">
+        <span>Phím tắt: <strong>[SPACE]</strong> Dừng tất cả | <strong>[1 - 9]</strong> Phát Pad | <strong>[N]</strong>
+          Kịch bản tiếp theo | <strong>[M]</strong> Hạ nhạc MC</span>
+      </div>
+      <div class="footer-right">
+        <span>CLB TNTN TRỐNG ĐỒNG • Cao Đẳng Long An - CS Đức Hoà</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: ADD / EDIT CUE -->
+  <div class="modal-backdrop" id="cueModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="cueModalTitle">Thêm Mục Kịch Bản Mới</h3>
+        <button class="btn-modal-close" id="btnCloseCueModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Thời điểm dự kiến (ví dụ: 08:00 - 08:15):</label>
+          <input type="text" id="modalCueTime" placeholder="08:00">
+        </div>
+        <div class="form-group">
+          <label>Nội dung sự kiện / Tiết mục:</label>
+          <input type="text" id="modalCueTitle" placeholder="Đón tiếp đại biểu, phát biểu chào mừng...">
+        </div>
+        <div class="form-group">
+          <label>Nhạc hoặc Video gắn kèm:</label>
+          <select id="modalCueTrackSelect">
+            <option value="">(Không phát nhạc)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú kỹ thuật:</label>
+          <input type="text" id="modalCueNote" placeholder="MC nói xong mới bấm nhạc...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnCancelCueModal">Hủy</button>
+        <button class="btn-primary" id="btnSaveCueModal">Lưu Kịch Bản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIO ENGINE & APPLICATION LOGIC -->
+  <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+================================================================================
+   CLB TNTN TRỐNG ĐỒNG - BÀN ĐIỀU KHIỂN ÂM THANH & VIDEO SỰ KIỆN
+   Trường Cao Đẳng Long An - Cơ Sở Đức Hoà
+================================================================================
+
+1. CÁCH MỞ VÀ SỬ DỤNG:
+   - Cách 1 (Khuyên dùng): Nhấp đúp chuột vào file "Chay_Trang_Web.bat" để khởi chạy máy chủ offline cục bộ. Web sẽ tự mở trên trình duyệt (Edge / Chrome).
+   - Cách 2: Mở trực tiếp file "index.html" bằng trình duyệt web.
+
+2. CÁC TÍNH NĂNG CHÍNH DÀNH CHO BẤM NHẠC SỰ KIỆN:
+   - Tải lên hàng loạt: Bấm "Thêm Âm Thanh / Video" hoặc kéo thả nhiều file (MP3, WAV, M4A, MP4, WebM) vào trang web.
+   - Bàn phím nhanh (Soundboard Pads):
+     + Mỗi bài hát/video sẽ thành 1 ô Pad lớn, hiển thị tên bài, thời lượng, thanh tiến trình phát theo thời gian thực.
+     + Có thanh trượt âm lượng riêng cho từng bài.
+     + Có nút lặp lại (Loop) cho các bài nhạc nền đón khách hoặc video visual LED sân khấu.
+     + Có nút Fade Out riêng cho từng bài (giảm âm lượng mượt mà rồi ngắt, không bị cụt âm thanh).
+   - Chế độ phát:
+     + Đơn âm (Solo): Bấm bài mới thì bài cũ tự tắt (dùng cho các tiết mục/nhạc nền chính).
+     + Đa âm (Mix): Cho phép bật đè nhiều âm thanh cùng lúc (ví dụ: đang phát nhạc nền thì bấm thêm tiếng vỗ tay hoặc kèn trao thưởng).
+   - Hạ Nhạc MC (Auto Ducking):
+     + Bấm nút "Hạ Nhạc MC" (Phím tắt: M): Giảm ngay 75% âm lượng nhạc nền khi MC cất tiếng nói, bấm lại để trả về 100% âm lượng như cũ.
+   - Nút Dừng Khẩn Cấp (PANIC STOP ALL):
+     + Nhấn phím SPACE (Phím cách): Lập tức ngắt toàn bộ âm thanh và video đang chạy.
+   - Fade Out Toàn Bộ:
+     + Nhấn phím F hoặc nút "Fade Out" để giảm dần âm lượng trong 1s - 5s rồi dừng êm dịu.
+   - Màn Chiếu Sân Khấu / Máy Chiếu (Projector / Màn LED):
+     + Bấm nút "Màn Chiếu Sân Khấu (LED)" để mở một cửa sổ phụ dành riêng cho máy chiếu hoặc màn hình phụ nối dây HDMI.
+     + Nhấn F11 hoặc nhấp đúp để Fullscreen trên máy chiếu.
+     + Màn chiếu tự động hiển thị Video đang phát hoặc Logo Trống Đồng trang trọng cùng dòng chữ chào mừng khi không có video.
+   - Kịch Bản Thứ Tự Sự Kiện (Cue Sheet):
+     + Lên lịch trình theo từng mốc giờ (Đón khách -> Văn nghệ -> Chào cờ -> Tuyên bố lý do -> Khen thưởng...).
+     + Bấm nút "Phát Mục Tiếp Theo (NEXT)" (Phím tắt: N) để chạy từng tiết mục trơn tru.
+   - Bộ Hiệu Ứng Âm Thanh Sẵn Có (FX Presets):
+     + Tích hợp sẵn tiếng vỗ tay, hồi trống hội, kèn fanfare trao thưởng, tiếng chuông báo hiệu... tạo bằng Web Audio API không cần tải file ngoài.
+   - Lưu trữ tự động (IndexedDB):
+     + Các file và ghi chú bạn tải lên được lưu trong bộ nhớ máy tính, lần sau mở lại vẫn còn nguyên!
+
+3. DANH SÁCH PHÍM TẮT TIỆN LỢI:
+   - [SPACE]: DỪNG TOÀN BỘ ÂM THANH & VIDEO KHẨN CẤP
+   - [1] đến [9]: Bật nhanh bài số 1 đến số 9
+   - [Q], [W], [E], [R], [T], [A], [S], [D], [F]: Bật các bài tiếp theo
+   - [M]: Bật / Tắt chế độ Hạ Nhạc Cho MC Nói
+   - [N]: Chạy mục tiếp theo trong kịch bản chương trình
+   - [F]: Giảm dần âm lượng (Fade Out) tất cả các bài đang phát
